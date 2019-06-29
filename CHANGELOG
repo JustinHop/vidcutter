@@ -1,3 +1,9 @@
+vidcutter (6.0.0j) dev; urgency=low
+
+  * Join option: Added option to not rejoin videos
+
+  * IONICE: added ionice -c 3 before ffmpeg command. Should probably add flag.
+
 vidcutter (6.0.0-1) stable; urgency=medium
 
   * MAJOR FEATURE: video filters menu option added to app menu accessed via
