@@ -294,6 +294,7 @@ class VideoService(QObject):
             run: bool=True) -> Union[bool, str]:
         self.checkDiskSpace(output)
         stream_map = self.parseMappings(allstreams)
+        stream_map = ""
         if vcodec is not None:
             encode_options = VideoService.config.encoding.get(vcodec, vcodec)
             args = '-v 32 -i "{}" -ss {} -t {} -c:v {} -c:a copy -c:s copy {}-avoid_negative_ts 1 ' \
@@ -302,7 +303,8 @@ class VideoService(QObject):
             args = '-v error -ss {} -t {} -i "{}" -c copy {}-avoid_negative_ts 1 -y "{}"' \
                    .format(frametime, duration, source, stream_map, output)
         if run:
-            result = self.cmdExec(self.backends.ffmpeg, args)
+            # result = self.cmdExec(self.backends.ffmpeg, args)
+            result = self.cmdExec('/usr/bin/ionice', ' -c 3 ' + self.backends.ffmpeg + ' ' + args)
             if not result or os.path.getsize(output) < 1000:
                 if allstreams:
                     # cut failed so try again without mapping all media streams
@@ -455,6 +457,8 @@ class VideoService(QObject):
             pass
 
     def join(self, inputs: List[str], output: str, allstreams: bool=True, chapters: Optional[List[str]]=None) -> bool:
+        if getattr(self.parent, 'joinOutput', False):
+            return True
         self.checkDiskSpace(output)
         filelist = os.path.normpath(os.path.join(os.path.dirname(inputs[0]), '_vidcutter.list'))
         with open(filelist, 'w') as f:
@@ -613,6 +617,8 @@ class VideoService(QObject):
     # noinspection PyBroadException
     def mpegtsJoin(self, inputs: list, output: str, chapters: Optional[List[str]]=None) -> bool:
         result = False
+        if getattr(self.parent, 'joinOutput', False):
+            return result
         try:
             self.checkDiskSpace(output)
             outfiles = []

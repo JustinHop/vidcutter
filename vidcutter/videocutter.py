@@ -104,6 +104,8 @@ class VideoCutter(QWidget):
 
         self.createChapters = self.settings.value('chapters', 'on', type=str) in {'on', 'true'}
         self.enableOSD = self.settings.value('enableOSD', 'on', type=str) in {'on', 'true'}
+        self.joinOutput = self.settings.value('join', 'off', type=str) in {'on', 'true'}
+        self.scriptOutput = self.settings.value('script', 'off', type=str) in {'on', 'true'}
         self.hardwareDecoding = self.settings.value('hwdec', 'on', type=str) in {'on', 'auto'}
         self.enablePBO = self.settings.value('enablePBO', 'off', type=str) in {'on', 'true'}
         self.keepRatio = self.settings.value('aspectRatio', 'keep', type=str) == 'keep'
@@ -437,7 +439,7 @@ class VideoCutter(QWidget):
         if sys.platform != 'darwin':
             controlsLayout.addSpacing(5)
 
-        layout = QVBoxLayout()  
+        layout = QVBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(10, 10, 10, 0)
         layout.addLayout(self.videoLayout)

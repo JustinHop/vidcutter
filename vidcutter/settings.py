@@ -236,6 +236,30 @@ class VideoPage(QWidget):
         super(VideoPage, self).__init__(parent)
         self.parent = parent
         self.setObjectName('settingsvideopage')
+        joinCheckbox = QCheckBox('Join Videos', self)
+        joinCheckbox.setToolTip('Join together videos that are split')
+        joinCheckbox.setCursor(Qt.PointingHandCursor)
+        joinCheckbox.setChecked(self.parent.parent.joinOutput)
+        joinCheckbox.stateChanged.connect(self.switchJoin)
+        joinLabel = QLabel('''
+            <b>ON:</b> Join together video files that are split
+            <br/>
+            <b>OFF:</b> Leave files split''', self)
+        joinLabel.setObjectName('joinlabel')
+        joinLabel.setTextFormat(Qt.RichText)
+        joinLabel.setWordWrap(True)
+        scriptCheckbox = QCheckBox('Script Output', self)
+        scriptCheckbox.setToolTip('Only output a shell script of commands to execute')
+        scriptCheckbox.setCursor(Qt.PointingHandCursor)
+        scriptCheckbox.setChecked(self.parent.parent.scriptOutput)
+        scriptCheckbox.stateChanged.connect(self.switchScript)
+        scriptLabel = QLabel('''
+            <b>ON:</b> Only output to a script file.
+            <br/>
+            <b>OFF:</b> Actually do ffmpeg commands''', self)
+        scriptLabel.setObjectName('scriptlabel')
+        scriptLabel.setTextFormat(Qt.RichText)
+        scriptLabel.setWordWrap(True)
         decodingCheckbox = QCheckBox('Hardware decoding', self)
         decodingCheckbox.setToolTip('Enable hardware based video decoding')
         decodingCheckbox.setCursor(Qt.PointingHandCursor)
@@ -279,6 +303,12 @@ class VideoPage(QWidget):
         ratioLabel.setTextFormat(Qt.RichText)
         ratioLabel.setWordWrap(True)
         videoLayout = QVBoxLayout()
+        videoLayout.addWidget(joinCheckbox)
+        videoLayout.addWidget(joinLabel)
+        videoLayout.addLayout(SettingsDialog.lineSeparator())
+        videoLayout.addWidget(scriptCheckbox)
+        videoLayout.addWidget(scriptLabel)
+        videoLayout.addLayout(SettingsDialog.lineSeparator())
         videoLayout.addWidget(decodingCheckbox)
         videoLayout.addWidget(decodingLabel)
         videoLayout.addLayout(SettingsDialog.lineSeparator())
@@ -337,6 +367,18 @@ class VideoPage(QWidget):
         mainLayout.addWidget(noteLabel)
         mainLayout.addStretch(1)
         self.setLayout(mainLayout)
+
+    @pyqtSlot(int)
+    def switchJoin(self, state: int) -> None:
+        # self.parent.parent.mpvWidget.property('script', 'true' if state == Qt.Checked else 'no')
+        self.parent.parent.saveSetting('joinOutput', state == Qt.Checked)
+        self.parent.parent.joinOuptut = (state == Qt.Checked)
+
+    @pyqtSlot(int)
+    def switchScript(self, state: int) -> None:
+        # self.parent.parent.mpvWidget.property('script', 'true' if state == Qt.Checked else 'no')
+        self.parent.parent.saveSetting('script', state == Qt.Checked)
+        self.parent.parent.scriptOuptut = (state == Qt.Checked)
 
     @pyqtSlot(int)
     def switchDecoding(self, state: int) -> None:
@@ -521,7 +563,7 @@ class GeneralPage(QWidget):
         keepClipsCheckbox.setChecked(self.parent.parent.keepClips)
         keepClipsCheckbox.stateChanged.connect(self.keepClips)
         keepClipsLabel = QLabel('''
-            <b>ON:</b> keep the clip segments set in your clip index after they have been joined 
+            <b>ON:</b> keep the clip segments set in your clip index after they have been joined
             <br/>
             <b>OFF:</b> clip segments are automatically deleted once joined to produce your file
         ''', self)
