@@ -303,17 +303,23 @@ class VideoService(QObject):
             args = '-v error -ss {} -t {} -i "{}" -c copy {}-avoid_negative_ts 1 -y "{}"' \
                    .format(frametime, duration, source, stream_map, output)
         if run:
-            # result = self.cmdExec(self.backends.ffmpeg, args)
-            result = self.cmdExec('/usr/bin/ionice', ' -c 3 ' + self.backends.ffmpeg + ' ' + args)
-            if not result or os.path.getsize(output) < 1000:
-                if allstreams:
-                    # cut failed so try again without mapping all media streams
-                    self.logger.info('cut resulted in zero length file, trying again without all stream mapping')
-                    self.cut(source, output, frametime, duration, False)
-                else:
-                    # both attempts to cut have failed so exit and let user know
-                    VideoService.cleanup([output])
-                    return False
+            if getattr(self.parent, 'scriptOutput', True):
+                # result = self.cmdExec(self.backends.ffmpeg, args)
+                result = self.cmdExec('/usr/bin/ionice', '-c 3 ' + self.backends.ffmpeg + ' ' + args)
+                if not result or os.path.getsize(output) < 1000:
+                    if allstreams:
+                        # cut failed so try again without mapping all media streams
+                        self.logger.info('cut resulted in zero length file, trying again without all stream mapping')
+                        self.cut(source, output, frametime, duration, False)
+                    else:
+                        # both attempts to cut have failed so exit and let user know
+                        VideoService.cleanup([output])
+                        return False
+            else:
+                with open('{}.sh'.format(source), "a") as scriptFile:
+                    self.commandString = '/usr/bin/ionice' + ' -c 3 ' + self.backends.ffmpeg + ' ' + args
+                    self.logger.info('commandString = {}'.format(self.commandString))
+                    scriptFile.write(self.commandString)
             return True
         else:
             if os.getenv('DEBUG', False) or getattr(self.parent, 'verboseLogs', False):
@@ -457,6 +463,8 @@ class VideoService(QObject):
             pass
 
     def join(self, inputs: List[str], output: str, allstreams: bool=True, chapters: Optional[List[str]]=None) -> bool:
+        self.logger.info('joinOutput (False) = {}'.format(getattr(self.parent, 'joinOutput', False)))
+        self.logger.info('joinOutput (True) = {}'.format(getattr(self.parent, 'joinOutput', True)))
         if getattr(self.parent, 'joinOutput', False):
             return True
         self.checkDiskSpace(output)
@@ -616,8 +624,10 @@ class VideoService(QObject):
 
     # noinspection PyBroadException
     def mpegtsJoin(self, inputs: list, output: str, chapters: Optional[List[str]]=None) -> bool:
-        result = False
+        self.logger.info('joinOutput (False) = {}'.format(getattr(self.parent, 'joinOutput', False)))
+        self.logger.info('joinOutput (True) = {}'.format(getattr(self.parent, 'joinOutput', True)))
         if getattr(self.parent, 'joinOutput', False):
+            self.logger.info('Skipping mpegtsJoin')
             return result
         try:
             self.checkDiskSpace(output)

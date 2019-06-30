@@ -377,7 +377,7 @@ class VideoPage(QWidget):
     @pyqtSlot(int)
     def switchScript(self, state: int) -> None:
         # self.parent.parent.mpvWidget.property('script', 'true' if state == Qt.Checked else 'no')
-        self.parent.parent.saveSetting('script', state == Qt.Checked)
+        self.parent.parent.saveSetting('scriptOutput', state == Qt.Checked)
         self.parent.parent.scriptOuptut = (state == Qt.Checked)
 
     @pyqtSlot(int)

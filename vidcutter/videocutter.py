@@ -104,8 +104,8 @@ class VideoCutter(QWidget):
 
         self.createChapters = self.settings.value('chapters', 'on', type=str) in {'on', 'true'}
         self.enableOSD = self.settings.value('enableOSD', 'on', type=str) in {'on', 'true'}
-        self.joinOutput = self.settings.value('join', 'off', type=str) in {'on', 'true'}
-        self.scriptOutput = self.settings.value('script', 'off', type=str) in {'on', 'true'}
+        self.joinOutput = self.settings.value('joinOutput', 'off', type=str) in {'on', 'true'}
+        self.scriptOutput = self.settings.value('scriptOutput', 'off', type=str) in {'on', 'true'}
         self.hardwareDecoding = self.settings.value('hwdec', 'on', type=str) in {'on', 'auto'}
         self.enablePBO = self.settings.value('enablePBO', 'off', type=str) in {'on', 'true'}
         self.keepRatio = self.settings.value('aspectRatio', 'keep', type=str) == 'keep'
@@ -1389,7 +1389,11 @@ class VideoCutter(QWidget):
                                              'at our <a href="{}">GitHub Issues page</a> so that it can be fixed.</p>'
                                              .format(vidcutter.__bugreport__))
                         return
-            self.joinMedia(filelist)
+            self.logger.info('joinOutput = {}'.format(self.joinOutput))
+            if self.joinOutput:
+                self.joinMedia(filelist)
+            else:
+                self.complete(True, filelist[-1])
 
     def smartcutter(self, file: str, source_file: str, source_ext: str) -> None:
         self.smartcut_monitor = Munch(clips=[], results=[], externals=0)
@@ -1468,7 +1472,7 @@ class VideoCutter(QWidget):
             self.getAppIcon(encoded=True),
             self)
         self.notify.closed.connect(self.seekSlider.clearProgress)
-        self.notify.show()
+        # self.notify.show()
         if self.smartcut:
             QTimer.singleShot(1000, self.cleanup)
         self.setProjectDirty(False)
